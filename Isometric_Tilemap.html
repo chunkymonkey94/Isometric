@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Isometric Tilemap</title>
+		
+		<script src="jquery-3.1.1.js" type="text/javascript"></script>
+		<script src="utility.js" type="text/javascript"></script>
+		<script src="controller.js" type="text/javascript"></script>
+		<script src="world_Isometric.js" type="text/javascript"></script>
+		<script src="canvas.js" type="text/javascript"></script>
+		<script src="spritesheet.js" type="text/javascript"></script>
+		<script src="animate.js" type="text/javascript"></script>
+		<script src="sprite.js" type="text/javascript"></script>
+		
+		
+		<script language="javascript">
+			var Context = null;
+			var BLOCK_W = 64;
+			var BLOCK_H = 64;
+			var dir_h = 0.5;
+			
+			var map = [ 0,0,0,0,1,1,1,0,0,0,
+						1,1,1,1,1,1,1,1,0,0,
+						1,1,1,1,1,1,1,1,0,0,
+						1,0,0,0,1,1,1,0,0,0,
+						1,1,1,1,1,1,0,0,1,1,
+						1,1,1,1,1,1,1,1,1,1,
+						1,1,1,1,1,1,1,1,1,1,
+						1,1,1,1,1,1,1,1,1,1,
+						0,0,0,0,1,1,0,0,0,0,
+						0,0,0,1,1,1,0,0,0,0 ];
+						
+	  var HeightMap = [ 2,2,2,2,2,2,2,2,2,2,
+						2,2,2,2,2,2,2,2,2,2,
+						2,2,0,0,0,0,0,0,2,2,
+						2,2,0,0,0,0,0,0,2,2,
+						2,2,0,0,1,1,0,0,2,2,
+						2,2,0,0,1,1,0,0,2,2,
+						2,2,0,0,0,0,0,0,2,2,
+						2,2,0,0,0,0,0,0,2,2,
+						2,2,2,2,2,2,2,2,2,2,
+						2,2,2,2,2,2,2,2,2,2 ];
+			
+			var dog_x = 32;
+			var dog_y = 320;
+			var isLeft = false;
+			var frame = 0;
+			var mini_x = 10;
+			var mini_y = 10;
+
+			var spritesheet = new Spritesheet("dog-sprite-sheet.png");
+
+			var dirt = new Sprite("dirt.png");
+			var grass = new Sprite("grass.png");
+			var dog = new Sprite(spritesheet);
+			
+			$(document).ready(function() {
+				Context = new HTML("game", "black", 640, 640);
+				InitializeKeyboard();
+				InitializeAnimationCounters();
+				DisableScrollbars();
+				//console.log((BLOCK_H/2) * ((0*0.5) - (0/2) - (0.7)) + 320);
+			});
+			
+			function dogMovie() {
+				if (key.left) {
+					dog_x -= 2;
+					frame = [33,34,35,36];
+					isLeft = true;
+					mini_x -= .625;
+					mini_y -= .625;
+				}
+				if (key.right) {
+					dog_x += 2;
+					frame = [1,2,3,4];
+					isLeft = false;
+					mini_x += .625;
+					mini_y += .625;
+				}
+				if (key.up) {
+					dog_y -= 1;
+					frame = [49,50,51,52];
+					mini_x += .625;
+					mini_y -= .625;
+				}
+				if (key.down) {
+					dog_y += 1;
+					frame = [17,18,19,20];
+					mini_x -= .625;
+					mini_y += .625;
+				}
+				if (key.right && key.up){
+					frame = [57,58,59,60];
+				}
+				if (key.left && key.up){
+					frame = [41,42,43,44];
+				}
+				if (key.right && key.down){
+					frame = [9,10,11,12];
+				}
+				if (key.left && key.down){
+					frame = [25,26,27,28];
+				}
+				if (key.left + key.right + key.up + key.down == false){
+					frame = 0;
+				}
+				if (key.left && key.right){
+					frame = 0;
+				}
+				if (key.left && key.down && key.right){
+					frame = [17,18,19,20];
+				}
+				if (key.down && key.up){
+					frame = 0;
+				}
+				if (isLeft == true && key.left + key.right + key.up + key.down == false){
+					frame = 8;
+				}
+				
+			};
+
+			function colorFill(x,y,width,hight,color) {
+				Context.context.beginPath();
+				Context.context.rect(x,y,width,hight);
+				Context.context.fillStyle = color;
+				Context.context.fill();
+			};
+			function drawLine(x1,y1,x2,y2,color) {
+				Context.context.beginPath();
+				Context.context.moveTo(x1,y1);
+				Context.context.lineTo(x2,y2);
+				Context.context.strokeStyle = color;
+				Context.context.stroke();
+			};
+			function drawCircle(x,y,r,angle1,angle2,color){
+				Context.context.beginPath();
+				Context.context.arc(x, y, r, angle1, angle2);
+				Context.context.fillStyle = color;
+				Context.context.fill();
+			};
+
+			setInterval(function() {
+
+				var w = window.innerWidth;
+
+				var canvas_W = (w - 832)/2;
+				
+				var Xmini = Math.floor((mini_x/20));
+				var Ymini = Math.floor((mini_y/20));
+				var miniIndex = ((Ymini * 10) + Xmini);
+
+				if (canvas_W < 0) {
+					canvas_W = 0;
+				}
+				else {
+					canvas_W = (w - 832)/2;
+					}
+
+				window.tilemapX = Math.floor((dog_x - canvas_W)/32);
+				window.tilemapY = Math.floor((dog_y - 32)/32);
+					
+				window.tileIndex = ((window.tilemapY * 26) + window.tilemapX);
+
+
+				 ResetAnimationCounter();
+
+				 colorFill(0, 0, 640, 640, "lightblue");
+				
+				 firstMap();
+				 drawLine(0,330,320,170,'black');
+				 drawLine(320,170,640,330,'black');
+				 drawLine(0,361,320,521,'black');
+				 drawLine(320,521,640,361,'black');
+				 if ((Xmini >= 0 && Xmini <= 9) && (Ymini <= 1 && Ymini >= 0) || (Xmini >= 8 && Xmini <= 9) && (Ymini >= 0 && Ymini <= 9)) {
+					drawDog();
+					console.log("top first");
+				 }
+				 secondMap();
+				 drawLine(128,298,320,202,'black');
+				 drawLine(128,298,128,330,'black');
+				 drawLine(320,202,512,298,'black');
+				 drawLine(512,298,512,330,'black');
+				 if ((Xmini >= 2 && Xmini <= 7) && (Ymini >= 2 && Ymini <= 3) || (Xmini >= 6 && Xmini <= 7) && (Ymini >= 2 && Ymini <= 7)) {
+					drawDog();
+					console.log("top second");
+				 }
+				 thirdMap();
+				 drawLine(256,266,320,234,'black');
+				 drawLine(320,234,384,266,'black');
+				 drawLine(256,266,256,298,'black');
+				 drawLine(384,266,384,298,'black');
+				 if ((Xmini >= 4 && Xmini <= 5) && (Ymini >= 4 && Ymini <= 5)) {
+					drawDog();
+					console.log("top third");
+				 }
+				 if ((Xmini <= 1 && Xmini >= 0) && (Ymini >= 2 && Ymini <= 7) || (Xmini <= 7 && Xmini >= 0) && (Ymini <= 9 && Ymini >= 8)){
+					drawDog();
+					console.log("top all-1");
+				}
+				if ((Xmini <= 3 && Xmini >= 2) && (Ymini >= 4 && Ymini <= 7) || (Xmini <= 5 && Xmini >= 2) && (Ymini <= 7 && Ymini >= 6)){
+					drawDog();
+					console.log("top all-2");
+				}
+				
+				 dogMovie();
+				
+				
+				 function drawDog() {
+					 Context.context.save();
+					 Context.context.translate(-16,-16);
+					 if (HeightMap[miniIndex] == 0){
+						dog.draw(dog_x, dog_y-32, frame);
+					}
+					 else if (HeightMap[miniIndex] == 1) {
+						 dog.draw(dog_x, dog_y-64, frame);
+					}
+					 else if (HeightMap[miniIndex] == 2) {
+						 dog.draw(dog_x, dog_y, frame);
+					}
+					 Context.context.restore();
+				 }
+				 
+				 if (mini_x < 0.5) {
+					mini_x += 1.25;
+					dog_x += 2;
+					dog_y -= 1;
+				 }
+				 else if (mini_x > 199.5) {
+					mini_x -= 1.25;
+					dog_x -= 2;
+					dog_y += 1;
+				 }
+				 else if (mini_y > 199.5) {
+					mini_y -= 1.25;
+					dog_x -= 2;
+					dog_y -= 1;
+				 }
+				  else if (mini_y < 0.5) {
+					mini_y += 1.25;
+					dog_x += 2;
+					dog_y += 1;
+				 }
+				 
+				 colorFill(0, 0, 200, 200,"gray");
+				 for(y=20;y<200;y+=20){
+					for(x=20;x<200;x+=20){
+						drawLine(0,y,200,y,"white");
+						drawLine(x,0,x,200,"white");
+					}
+				 };
+				 drawCircle(mini_x,mini_y,5,0,2*Math.PI,"blue");
+				 //console.log('Xmini = '+Xmini+', Ymini = '+Ymini+', miniIndex = '+miniIndex);
+			}, 24);
+		</script>
+		
+		<style>
+			html{margin-left:auto; margin-right:auto;}
+			#container{margin-left:auto; margin-right:auto; margin-top:32px; background-color:black; width:640px; height:640px}
+			body{margin:0px; background-color:black; width:100%; height:640px;}
+		</style>
+	</head>
+	
+	<body>
+	<div id="container">
+		<canvas id="game"></canvas>
+	</div>
+	</body>
+</html>
